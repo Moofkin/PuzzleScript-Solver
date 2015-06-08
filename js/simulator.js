@@ -448,16 +448,16 @@ function MCTSNode(leveldat){
 var MCTSEpsilon = 0.00001;
 
 MCTSNode.prototype.Update = function(win){
-	//this.wins += win;
-	this.wins += get_level_score(this.state);
+	this.wins += win;
+	//this.wins += get_level_score(this.state);
 	this.visits++;
-	this.score = this.wins / (this.visits + MCTSEpsilon) + Math.sqrt(Math.log(this.visits+1) / (this.visits + MCTSEpsilon)) + Math.random() * MCTSEpsilon;
+	this.score = this.wins / (this.visits + 1);
 	//this.score = this.wins;
 };
 
 MCTSNode.prototype.ChooseChild = function(){
 	var returnChild = this.children[0];
-	for(var i = 1; i > this.children.length; i++){
+	for(var i = 1; i < this.children.length; i++){
 		if(this.children[i].score > returnChild.score){
 			returnChild = this.children[i];
 		}
@@ -496,6 +496,7 @@ function mcts(startState, maxIterations_, rolloutLimit) {
 			
 			//rollout
 			for(var j = 0; j < rolloutLimit; j++){
+				//console.log(i);
 				shuffle(childNode.moves);
 				var newMove = childNode.moves.pop();
 				processInput(newMove, true, false);
@@ -519,20 +520,40 @@ function mcts(startState, maxIterations_, rolloutLimit) {
 				else
 					childNode.Update(0);
 				childNode = childNode.parent;
+			}		
+		}
+		
+		//check to see if any wins were found
+		var winFlag = false;
+		for (var i = 0; i < 5; i++){
+			if (rootstate.children[i].score != 0){
+				winFlag = true;
 			}
 		}
+		if (winFlag == false){
+			console.log("exhausted");
+			return [];
+		}
+		else
+			console.log("found at least one win");
+			
 		rootstate = rootstate.ChooseChild();
-		console.log(rootstate.children);
 		restoreLevel(rootstate.state);
 		
 	}
-	var moves = [];
-	while (rootstate.move != null){
-		moves[moves.length] = rootstate.move;
-		rootstate = rootstate.parent;
+	if (isLevelWinning(rootstate.state)){
+		var moves = [];
+		while (rootstate.move != null){
+			moves.unshift(rootstate.move);
+			rootstate = rootstate.parent;
+		}
+		console.log(moves);
+		return moves;
 	}
-	console.log(moves);
-	return moves;
+	else{
+		console.log("Could not find winning state!");
+		return [];
+	}
 }
 
 
