@@ -431,6 +431,112 @@ function bfs(startState, maxIterations_) {
 
 }
 
+//-----------------------------------------Monte Carlo Tree Search Stuff------------------------------------
+
+function MCTSNode(leveldat){
+	//this.state = level.dat;
+	this.state = leveldat;
+	this.move;
+	this.parent;
+	this.children = [];
+	this.score = 0;
+	this.wins = 0;
+	this.visits;
+	this.moves = [0, 1, 2, 3, 4];
+}
+
+var MCTSEpsilon = 0.00001;
+
+MCTSNode.prototype.Update = function(win){
+	this.wins += win;
+	//this.wins += get_level_score(this.state);
+	this.visits++;
+	//this.score = this.wins / (this.visits + MCTSEpsilon) + Math.sqrt(Math.log(this.visits+1) / (this.visits + MCTSEpsilon)) + Math.random() * MCTSEpsilon;
+	this.score = this.wins;
+};
+
+MCTSNode.prototype.ChooseChild = function(){
+	var returnChild = this.children[0];
+	for(var i = 1; i < this.children.length; i++){
+		if(this.children[i].score > returnChild.score){
+			returnChild = this.children[i];
+		}
+	}
+	return returnChild;
+};
+
+function mcts(startState, maxIterations_, rolloutLimit) {
+	var rootstate = new MCTSNode(startState);
+	rootstate.move = null;
+	rootstate.parent = null;
+	rootstate.visits = 1;
+	//while (!isLevelWinning(rootstate.state)){
+		
+		for (var i = 0; i < maxIterations_; i++) {
+			var newNode = rootstate;
+			restoreLevel(newNode.state);
+			var childNode;
+			
+			//select
+			while((newNode.moves.length == 0) && (newNode.children.length != 0)){
+				newNode = newNode.ChooseChild();
+				restoreLevel(newNode.state);
+			}
+			//expand
+			if(newNode.moves.length != 0){
+				shuffle(newNode.moves);
+				var newMove = newNode.moves.pop();
+				processInput(newMove, true, false);
+				for (var j=0; j < silent_tick_count; j++) {
+					processInput(-1,true,false);
+				}
+				childNode = new MCTSNode(backupLevel());
+				childNode.move = newMove;
+				childNode.parent = newNode;
+				childNode.visits = 1;
+				newNode.children.push(childNode);
+			}
+			
+			//rollout
+			for(var j = 0; j < rolloutLimit; j++){
+				shuffle(childNode.moves);
+				var newMove = childNode.moves.pop();
+				processInput(newMove, true, false);
+				for (var j=0; j < silent_tick_count; j++) {
+					processInput(-1,true,false);
+				}
+				tempdat = backupLevel();
+				selectedChild = new MCTSNode(tempdat);
+				selectedChild.move = newMove;
+				selectedChild.parent = childNode;
+				selectedChild.visits = 1;
+				childNode.children.push(selectedChild);
+				childNode = selectedChild;
+				if (isLevelWinning(tempdat)){
+					break;
+				}
+			}
+			//backpropagate
+			var rolledstate = backupLevel();
+			while(childNode.parent){
+				if (isLevelWinning(rolledstate)){
+					childNode.Update(1);
+				}
+				else
+					childNode.Update(0);
+				childNode = childNode.parent;
+			}
+		}
+		rootstate = rootstate.ChooseChild();
+		console.log(rootstate.children);
+		restoreLevel(rootstate.state);
+		
+	//}
+}
+
+
+//---------------------------------------------------------------------------------------------------------
+
 function rebuild() {
 	clearConsole();
 	compile(["rebuild"]);
