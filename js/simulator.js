@@ -448,16 +448,16 @@ function MCTSNode(leveldat){
 var MCTSEpsilon = 0.00001;
 
 MCTSNode.prototype.Update = function(win){
-	this.wins += win;
-	//this.wins += get_level_score(this.state);
+	//this.wins += win;
+	this.wins += get_level_score(this.state);
 	this.visits++;
-	//this.score = this.wins / (this.visits + MCTSEpsilon) + Math.sqrt(Math.log(this.visits+1) / (this.visits + MCTSEpsilon)) + Math.random() * MCTSEpsilon;
-	this.score = this.wins;
+	this.score = this.wins / (this.visits + MCTSEpsilon) + Math.sqrt(Math.log(this.visits+1) / (this.visits + MCTSEpsilon)) + Math.random() * MCTSEpsilon;
+	//this.score = this.wins;
 };
 
 MCTSNode.prototype.ChooseChild = function(){
 	var returnChild = this.children[0];
-	for(var i = 1; i < this.children.length; i++){
+	for(var i = 1; i > this.children.length; i++){
 		if(this.children[i].score > returnChild.score){
 			returnChild = this.children[i];
 		}
@@ -470,7 +470,7 @@ function mcts(startState, maxIterations_, rolloutLimit) {
 	rootstate.move = null;
 	rootstate.parent = null;
 	rootstate.visits = 1;
-	//while (!isLevelWinning(rootstate.state)){
+	while (!isLevelWinning(rootstate.state)){
 		
 		for (var i = 0; i < maxIterations_; i++) {
 			var newNode = rootstate;
@@ -487,9 +487,6 @@ function mcts(startState, maxIterations_, rolloutLimit) {
 				shuffle(newNode.moves);
 				var newMove = newNode.moves.pop();
 				processInput(newMove, true, false);
-				for (var j=0; j < silent_tick_count; j++) {
-					processInput(-1,true,false);
-				}
 				childNode = new MCTSNode(backupLevel());
 				childNode.move = newMove;
 				childNode.parent = newNode;
@@ -502,9 +499,6 @@ function mcts(startState, maxIterations_, rolloutLimit) {
 				shuffle(childNode.moves);
 				var newMove = childNode.moves.pop();
 				processInput(newMove, true, false);
-				for (var j=0; j < silent_tick_count; j++) {
-					processInput(-1,true,false);
-				}
 				tempdat = backupLevel();
 				selectedChild = new MCTSNode(tempdat);
 				selectedChild.move = newMove;
@@ -531,7 +525,14 @@ function mcts(startState, maxIterations_, rolloutLimit) {
 		console.log(rootstate.children);
 		restoreLevel(rootstate.state);
 		
-	//}
+	}
+	var moves = [];
+	while (rootstate.move != null){
+		moves[moves.length] = rootstate.move;
+		rootstate = rootstate.parent;
+	}
+	console.log(moves);
+	return moves;
 }
 
 

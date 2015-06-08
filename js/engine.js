@@ -720,7 +720,7 @@ function restoreLevel(lev) {
     againing=false;
     messagetext="";
     level.commandQueue=[];
-	redraw();
+	//redraw();
 }
 
 var zoomscreen=false;
@@ -2058,7 +2058,7 @@ function processInput(dir,dontCheckWin,dontModify) {
     		DoUndo(true);
     		seedsToPlay_CanMove=[];
     		seedsToPlay_CantMove=[];
-    		redraw();
+    		//redraw();
         		if (verbose_logging) {
         			consoleCacheDump();
         		}
@@ -2073,7 +2073,7 @@ function processInput(dir,dontCheckWin,dontModify) {
 	    	DoRestart(true);	
     		seedsToPlay_CanMove=[];
     		seedsToPlay_CantMove=[];
-    		redraw();  
+    		//redraw();  
     		if (verbose_logging) {
     			consoleCacheDump();
     		} 
@@ -2180,7 +2180,7 @@ function processInput(dir,dontCheckWin,dontModify) {
 
     }
 
-    redraw();
+    //redraw();
 
 	if (verbose_logging) {
 		consoleCacheDump();
